@@ -6,10 +6,12 @@
 ## Methamtics Ocean - a simple formula editor.
 
 
-> Warning!
-> This project is developing, don't expect too much
+> [!WARNING]
+> This project is in development, don't expect too much
 
-# Featurs
+> [!ERROR]
+> Featurs
+
 - Powers
 - Format on tab
 - ~~Fractions~~ Coming soon
