@@ -6,7 +6,7 @@
 ## Methamtics Ocean - a simple formula editor.
 
 
-> [Warning]
+> [!WARNING]
 > This project is developing, don't expect too much
 
 # Featurs
