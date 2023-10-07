@@ -1,27 +1,29 @@
-use piston::{
-    EventSettings, Events, RenderArgs, RenderEvent, UpdateArgs, UpdateEvent, WindowSettings,
-};
-use piston_window::rectangle;
+use std::{thread, time::Duration};
+
+use piston::WindowSettings;
 use piston_window::*;
+
+use crate::widgets::input::Input as WInput;
 
 pub struct Core {
     window: PistonWindow,
 }
 
 impl Core {
-    pub fn new() -> Self {
-        const WIDTH: u32 = 850;
-        const HEIGHT: u32 = 450;
+    const WIDTH: u32 = 850;
+    const HEIGHT: u32 = 450;
 
-        let window: PistonWindow = WindowSettings::new("MOcean", [WIDTH, HEIGHT])
-            .exit_on_esc(true)
+    pub fn new() -> Self {
+        let window: PistonWindow = WindowSettings::new("MOcean", [Self::WIDTH, Self::HEIGHT])
+            .exit_on_esc(false)
+            .resizable(false)
             .build()
             .unwrap();
 
         Self { window: window }
     }
 
-    fn render(&mut self, args: &RenderArgs) {
+    pub async fn run(&mut self) {
         let BLACK = [0.2, 0.2, 0.2, 1.0];
         let WHITE = [1.0, 1.0, 1.0, 1.0];
 
@@ -30,42 +32,28 @@ impl Core {
             .unwrap();
         let mut glyphs = self.window.load_font(assets.join("font.ttf")).unwrap();
 
-        self.window.set_lazy(true);
+        let mut input = WInput::new().await;
         while let Some(e) = self.window.next() {
-            self.window.draw_2d(&e, |c, g, device| {
-                let transform = c.transform.trans(10.0, 100.0);
+            if let Some(Button::Keyboard(key)) = e.press_args() {
+                input.press(key).await;
+            }
+            if let Some(Button::Keyboard(key)) = e.release_args() {
+                input.release(key).await;
+            }
 
-                clear([1.0, 1.0, 1.0, 1.0], g);
-                text::Text::new_color([0.0, 0.0, 0.0, 1.0], 32)
-                    .draw("Hello world!", &mut glyphs, &c.draw_state, transform, g)
+            self.window.draw_2d(&e, |c, g, device| {
+                let transform = c.transform.trans(
+                    Self::WIDTH as f64 / 2.0 - (input.text.len() * 10) as f64,
+                    Self::HEIGHT as f64 / 2.0,
+                );
+
+                clear(BLACK, g);
+                text::Text::new_color(WHITE, 32)
+                    .draw(&input.text, &mut glyphs, &c.draw_state, transform, g)
                     .unwrap();
 
                 glyphs.factory.encoder.flush(device);
             });
-
-            self.window.draw_2d(&e, |c, g, _| {
-                rectangle(
-                    [1.0, 0.0, 0.0, 1.0],
-                    [0.0, 0.0, 100.0, 100.0],
-                    c.transform,
-                    g,
-                );
-            });
         }
     }
-
-    pub fn run(&mut self) {
-        let mut events = Events::new(EventSettings::new());
-        while let Some(e) = events.next(&mut self.window) {
-            if let Some(args) = e.render_args() {
-                self.render(&args);
-            }
-
-            if let Some(args) = e.update_args() {
-                self.update(&args);
-            }
-        }
-    }
-
-    fn update(&mut self, args: &UpdateArgs) {}
 }

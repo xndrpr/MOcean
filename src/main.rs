@@ -1,3 +1,5 @@
+mod widgets;
+
 use core::Core;
 
 extern crate glutin_window;
@@ -7,7 +9,8 @@ extern crate piston;
 
 mod core;
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let mut core = Core::new();
-    core.run();
+    core.run().await;
 }
