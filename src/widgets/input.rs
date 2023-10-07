@@ -88,7 +88,7 @@ impl Input {
             key = key.replace("D", "");
         }
 
-        if key.contains(" ") || key.to_lowercase().contains("space") {
+        if key.to_lowercase().contains("tab") {
             println!("FDSFSD");
             self.text = self.power(true).await;
         } else if self.text.contains("^") {
