@@ -25,8 +25,13 @@ impl Input {
         }
     }
 
-    async fn power(&self) -> String {
-        let re = Regex::new(r"(\w+|\d+)\^(-?\d+)([+\-×/_=!])").unwrap(); 
+    async fn power(&self, force: bool) -> String {
+        let re;
+        if force {
+            re = Regex::new(r"(\w+)\^(-?\d+)([+\-×/_=! ]*)").unwrap();
+        } else {
+            re = Regex::new(r"(\w+|\d+)\^(-?\d+)([+\-×/_=!])").unwrap();
+        }
 
         let replaced_string = re
             .replace_all(&self.text, |caps: &regex::Captures| {
@@ -83,8 +88,11 @@ impl Input {
             key = key.replace("D", "");
         }
 
-        if self.text.contains("^") {
-            self.text = self.power().await;
+        if key.contains(" ") || key.to_lowercase().contains("space") {
+            println!("FDSFSD");
+            self.text = self.power(true).await;
+        } else if self.text.contains("^") {
+            self.text = self.power(false).await;
         }
 
         if key.to_lowercase().contains("shift") {
