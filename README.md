@@ -1,7 +1,7 @@
 # MOcean
 
 ## Demo:
-![Screenshot](image.png)
+![Image](image.png)
 
 ## Methamtics Ocean - a simple formula editor.
 

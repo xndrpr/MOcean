@@ -74,6 +74,8 @@ impl Input {
             key = key.replace("Equals", "+");
             key = key.replace("D8", "×");
             key = key.replace("D6", "^");
+            key = key.replace("D0", ")");
+            key = key.replace("D9", "(");
         } else {
             key = key.replace("Equals", "=");
             key = key.replace("D8", "8");
