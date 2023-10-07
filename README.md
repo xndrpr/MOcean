@@ -9,7 +9,7 @@
 > [!WARNING]
 > This project is in development, don't expect too much
 
-> [!SUCCESS]
+> [!ERROR]
 > Featurs
 
 - Powers
