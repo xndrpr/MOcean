@@ -1,5 +1,8 @@
+use std::io::empty;
+
 use piston::{Button, Key};
 use piston_window::PistonWindow;
+use regex::Regex;
 
 #[derive(PartialEq, Debug)]
 pub enum Case {
@@ -22,6 +25,41 @@ impl Input {
         }
     }
 
+    async fn power(&self) -> String {
+        let re = Regex::new(r"(\w+|\d+)\^(-?\d+)([+\-×/_=!])").unwrap(); 
+
+        let replaced_string = re
+            .replace_all(&self.text, |caps: &regex::Captures| {
+                let base = &caps[1];
+                let num = &caps[2];
+                let symbol = &caps[3];
+                // let power = num.parse::<i32>().unwrap_or(0);
+
+                let superscripted_num = num
+                    .chars()
+                    .map(|c| match c {
+                        '1' => '¹',
+                        '2' => '²',
+                        '3' => '³',
+                        '4' => '⁴',
+                        '5' => '⁵',
+                        '6' => '⁶',
+                        '7' => '⁷',
+                        '8' => '⁸',
+                        '9' => '⁹',
+                        '0' => '⁰',
+                        '-' => '⁻',
+                        _ => c,
+                    })
+                    .collect::<String>();
+
+                format!("{}{}{}", base, superscripted_num, symbol)
+            })
+            .to_string();
+
+        replaced_string
+    }
+
     pub async fn press(&mut self, key: Key, width: f64) {
         let mut key = format!("{:?}", key)
             .replace("Minus", "-")
@@ -30,9 +68,11 @@ impl Input {
         if self.case == Case::UPPER {
             key = key.replace("Equals", "+");
             key = key.replace("D8", "×");
+            key = key.replace("D6", "^");
         } else {
             key = key.replace("Equals", "=");
             key = key.replace("D8", "8");
+            key = key.replace("D6", "6");
         }
 
         if self.text.chars().filter(|&c| c == '\n').count() < (width / 100.0) as usize {
@@ -43,6 +83,10 @@ impl Input {
             key = key.replace("D", "");
         }
 
+        if self.text.contains("^") {
+            self.text = self.power().await;
+        }
+
         if key.to_lowercase().contains("shift") {
             self.case = Case::UPPER;
 
@@ -50,8 +94,6 @@ impl Input {
         }
 
         if key.to_lowercase().contains("backspace") && !self.text.is_empty() {
-            println!("{:?}", self.case);
-
             if self.case == Case::LOWER {
                 self.text.pop();
             } else {

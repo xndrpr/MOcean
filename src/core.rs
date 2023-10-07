@@ -18,7 +18,7 @@ impl Core {
 
         let window: PistonWindow = WindowSettings::new("MOcean", [width, height])
             .exit_on_esc(false)
-            .resizable(true) // Make the window resizable
+            .resizable(true)
             .build()
             .unwrap();
 
@@ -54,7 +54,7 @@ impl Core {
 
             self.window.draw_2d(&e, |c, g, device| {
                 let lines: Vec<&str> = input.text.split("\n").collect();
-                let line_height = 32.0; // Height of each line of text
+                let line_height = 32.0;
                 let total_height = lines.len() as f64 * line_height;
                 let y_offset = (self.height as f64 - total_height) / 2.0;
 
@@ -63,7 +63,7 @@ impl Core {
                     let y = y_offset + (i as f64 * line_height);
                     let transform = c
                         .transform
-                        .trans(self.width as f64 / 2.0 - (line.len() * 10) as f64, y);
+                        .trans(self.width as f64 / 2.0 - (line.len() * 8) as f64, y);
 
                     text::Text::new_color(WHITE, 32)
                         .draw(line, &mut glyphs, &c.draw_state, transform, g)
