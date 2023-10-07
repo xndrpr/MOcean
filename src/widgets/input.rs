@@ -22,14 +22,20 @@ impl Input {
         }
     }
 
-    pub async fn press(&mut self, key: Key) {
+    pub async fn press(&mut self, key: Key, width: f64) {
         let mut key = format!("{:?}", key)
             .replace("Minus", "-")
-            .replace("Equals", "=")
-            .replace("Plus", "+")
             .replace("Space", " ");
 
-        if self.text.chars().filter(|&c| c == '\n').count() < 5 {
+        if self.case == Case::UPPER {
+            key = key.replace("Equals", "+");
+            key = key.replace("D8", "×");
+        } else {
+            key = key.replace("Equals", "=");
+            key = key.replace("D8", "8");
+        }
+
+        if self.text.chars().filter(|&c| c == '\n').count() < (width / 100.0) as usize {
             key = key.replace("Return", "\n");
         }
 
@@ -55,7 +61,7 @@ impl Input {
             return;
         }
 
-        if key.len() > 1 {
+        if key.len() > 2 {
             return;
         }
 
@@ -69,6 +75,11 @@ impl Input {
     async fn remove_last_word(&self, input: String) -> String {
         if input.contains(' ') {
             if let Some(last_space_idx) = input.rfind(' ') {
+                let result = input[..last_space_idx].trim().to_string();
+                return result;
+            }
+        } else if input.contains("\n") {
+            if let Some(last_space_idx) = input.rfind('\n') {
                 let result = input[..last_space_idx].trim().to_string();
                 return result;
             }
