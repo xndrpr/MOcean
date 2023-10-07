@@ -7,7 +7,7 @@
 
 
 > [!WARNING]
-> This project is developing, don't expect too much
+> This project is in development, don't expect too much
 
 # Featurs
 - Powers
