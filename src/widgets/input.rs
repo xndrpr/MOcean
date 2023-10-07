@@ -29,6 +29,10 @@ impl Input {
             .replace("Plus", "+")
             .replace("Space", " ");
 
+        if self.text.chars().filter(|&c| c == '\n').count() < 5 {
+            key = key.replace("Return", "\n");
+        }
+
         if key.len() > 1 {
             key = key.replace("D", "");
         }
