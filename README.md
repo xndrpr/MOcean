@@ -10,7 +10,8 @@
 > This project is in development, don't expect too much
 
 > [!SUCCESS]
-> Featurs:
+> Featurs
+
 - Powers
 - Format on tab
 - ~~Fractions~~ Coming soon
