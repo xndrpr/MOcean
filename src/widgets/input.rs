@@ -1,8 +1,9 @@
-use std::io::empty;
+use std::time::Duration;
 
-use piston::{Button, Key};
-use piston_window::PistonWindow;
+use piston::Key;
 use regex::Regex;
+
+use crate::cursor::Cursor;
 
 #[derive(PartialEq, Debug)]
 pub enum Case {
@@ -13,15 +14,17 @@ pub enum Case {
 pub struct Input {
     pub text: String,
     pub backspace: bool,
+    pub cursor: Cursor,
     case: Case,
 }
 
 impl Input {
     pub async fn new() -> Self {
         Self {
-            text: "".to_string(),
+            text: "\n".to_string(),
             case: Case::LOWER,
             backspace: false,
+            cursor: Cursor::new(0.0, 0.0, Duration::from_millis(350)),
         }
     }
 
@@ -38,7 +41,6 @@ impl Input {
                 let base = &caps[1];
                 let num = &caps[2];
                 let symbol = &caps[3];
-                // let power = num.parse::<i32>().unwrap_or(0);
 
                 let superscripted_num = num
                     .chars()
@@ -83,7 +85,7 @@ impl Input {
         }
 
         if self.text.chars().filter(|&c| c == '\n').count() < (width / 100.0) as usize {
-            key = key.replace("Return", "\n");
+            key = key.replace("Return", "\n\n");
         }
 
         if key.len() > 1 {
@@ -91,7 +93,6 @@ impl Input {
         }
 
         if key.to_lowercase().contains("tab") {
-            println!("FDSFSD");
             self.text = self.power(true).await;
         } else if self.text.contains("^") {
             self.text = self.power(false).await;
@@ -106,8 +107,14 @@ impl Input {
         if key.to_lowercase().contains("backspace") && !self.text.is_empty() {
             if self.case == Case::LOWER {
                 self.text.pop();
+                if self.text.len() <= 0 {
+                    self.text = "\n".to_string();
+                }
             } else {
                 self.text = self.remove_last_word(self.text.clone()).await;
+                if self.text.len() <= 0 {
+                    self.text = "\n".to_string();
+                }
             }
 
             return;
@@ -136,7 +143,7 @@ impl Input {
                 return result;
             }
         }
-        String::new()
+        "\n".to_string()
     }
 
     pub async fn release(&mut self, key: Key) {
