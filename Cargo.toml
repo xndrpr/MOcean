@@ -15,3 +15,4 @@ find_folder = "0.3.0"
 winapi = { version = "0.3", features = ["winuser"] }
 tokio = { version = "1.32.0", features = ["full"] }
 regex = "1.9.6"
+unicode-segmentation = "1.10.1"

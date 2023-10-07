@@ -28,6 +28,12 @@ impl Input {
         }
     }
 
+    async fn insert_char(&self, input_string: &str, pos: usize, ch: char) -> String {
+        let mut char_vec: Vec<char> = input_string.chars().collect();
+        char_vec.insert(pos, ch);
+        char_vec.into_iter().collect()
+    }
+
     async fn power(&self, force: bool) -> String {
         let re;
         if force {
@@ -68,6 +74,7 @@ impl Input {
     }
 
     pub async fn press(&mut self, key: Key, width: f64) {
+        println!("{:?}", key);
         let mut key = format!("{:?}", key)
             .replace("Minus", "-")
             .replace("Space", " ");
@@ -90,6 +97,8 @@ impl Input {
 
         if key.len() > 1 {
             key = key.replace("D", "");
+            key = key.replace("NumPad", "");
+            key = key.replace("NumPadDivide", "");
         }
 
         if key.to_lowercase().contains("tab") {
@@ -125,9 +134,17 @@ impl Input {
         }
 
         if self.case == Case::LOWER {
-            self.text = format!("{}{}", self.text, key.to_lowercase());
+            self.text = self
+                .insert_char(
+                    &self.text,
+                    self.text.len() - 1,
+                    key.to_lowercase().chars().next().unwrap(),
+                )
+                .await;
         } else {
-            self.text = format!("{}{}", self.text, key);
+            self.text = self
+                .insert_char(&self.text, self.text.len() - 1, key.chars().next().unwrap())
+                .await;
         }
     }
 

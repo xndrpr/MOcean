@@ -14,8 +14,11 @@
 
 - Powers
 - Format on tab
-- ~~Fractions~~ Coming soon
-- ~~Roots~~ Coming soon
+- Cursor
+- Cursor blink
+- ~~ Cursor movement ~~
+- ~~Fractions~~
+- ~~Roots~~
 
 # Get started
 Go to releases, download the archive and open it.
