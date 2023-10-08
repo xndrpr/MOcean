@@ -9,8 +9,7 @@
 > [!WARNING]
 > This project is in development, don't expect too much
 
-> [!ERROR]
-> Featurs
+# Featurs
 
 - Powers
 - Format on tab
