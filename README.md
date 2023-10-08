@@ -15,7 +15,7 @@
 - Format on tab
 - Cursor
 - Cursor blink
-- ~~ Cursor movement ~~
+- ~~Cursor movement~~
 - ~~Fractions~~
 - ~~Roots~~
 
