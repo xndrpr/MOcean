@@ -91,57 +91,51 @@ impl Core {
 
                     for (i, line) in lines.iter().enumerate() {
                         let mut result = "".to_string();
-                        let expressions: Vec<&str> = line.split("}").collect();
+                        let expressions: Vec<&str> = line.split("$)").collect();
+                        println!("{:#?}", expressions);
 
                         for i in 0..expressions.len() {
                             if i + 1 < expressions.len() {
                                 let next_exp = expressions.get(i + 1).unwrap();
-
-                                if next_exp.contains(")") {
-                                    let mut e = next_exp.split("$").nth(0).unwrap().to_string();
-                                    e.remove(0);
-                                    result += &e;
-                                }
+                                let exp = expressions.get(i).unwrap();
 
                                 /* ---- Power ---- */
-                                let re = Regex::new(r"\^").unwrap();
-                                if let Some(_) = re.find(&next_exp) {
-                                    if !next_exp.ends_with("^")
-                                        && !next_exp.ends_with("-")
-                                        && !next_exp.ends_with("/")
-                                    {
-                                        let base =
-                                            expressions.get(i).unwrap().split("{").nth(1).unwrap();
-                                        let exponent = next_exp
-                                            .split("}")
-                                            .nth(0)
-                                            .unwrap()
-                                            .split("{")
-                                            .nth(1)
-                                            .unwrap();
+                                if exp.contains("}^{") {
+                                    let base = exp
+                                        .split("{")
+                                        .nth(1)
+                                        .unwrap()
+                                        .replace("}", "")
+                                        .replace("^", "");
+                                    let exponent = exp.split("^{").nth(1).unwrap().replace("}", "");
 
-                                        result += base;
-                                        for ch in exponent.chars() {
-                                            let replacement = match ch {
-                                                '1' => "¹",
-                                                '2' => "²",
-                                                '3' => "³",
-                                                '4' => "⁴",
-                                                '5' => "⁵",
-                                                '6' => "⁶",
-                                                '7' => "⁷",
-                                                '8' => "⁸",
-                                                '9' => "⁹",
-                                                '0' => "⁰",
-                                                '-' => "⁻",
-                                                _ => "",
-                                            };
-                                            result.push_str(replacement);
-                                        }
+                                    result += &base;
+                                    for ch in exponent.chars() {
+                                        let replacement = match ch {
+                                            '1' => "¹",
+                                            '2' => "²",
+                                            '3' => "³",
+                                            '4' => "⁴",
+                                            '5' => "⁵",
+                                            '6' => "⁶",
+                                            '7' => "⁷",
+                                            '8' => "⁸",
+                                            '9' => "⁹",
+                                            '0' => "⁰",
+                                            '-' => "⁻",
+                                            _ => "",
+                                        };
+                                        result += replacement;
                                     }
                                 }
 
                                 /* ----  TODO: Fractions ---- */
+
+                                /* ---- Text ---- */
+
+                                if !next_exp.is_empty() && !next_exp.starts_with("$") {
+                                    result += next_exp;
+                                }
                             }
                         }
 

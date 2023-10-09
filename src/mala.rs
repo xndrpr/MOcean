@@ -20,7 +20,7 @@ impl MaLa {
         while let Some(mat) = re.captures(&self.content) {
             let base = mat[0].split("^").nth(0).unwrap();
             let exponent = mat[0].split("^").nth(1).unwrap();
-            let result = format!("$({{{}}}^{{{}}})", base, exponent)
+            let result = format!("$({{{}}}^{{{}}}$)", base, exponent)
                 .trim()
                 .replace("\n", "");
 
@@ -40,7 +40,7 @@ impl MaLa {
         while let Some(mat) = re.captures(&self.content) {
             let numerator = mat[0].split("/").nth(0).unwrap();
             let denominator = mat[0].split("/").nth(1).unwrap();
-            let result = format!("$({{{}}}/{{{}}})", numerator, denominator);
+            let result = format!("$({{{}}}/{{{}}}$)", numerator, denominator);
             self.content.replace_range(
                 mat.get(0).unwrap().start()..mat.get(0).unwrap().end(),
                 &result,
@@ -69,14 +69,14 @@ mod tests {
     async fn frac_n_power() {
         let mut mala = MaLa::new();
         mala.format("x^2 + 2/3").await;
-        assert_eq!(mala.content, "$({x}^{2}) + $({2}/{3})");
+        assert_eq!(mala.content, "$({x}^{2}$) + $({2}/{3}$)");
     }
 
     #[tokio::test]
     async fn negative_power() {
         let mut mala = MaLa::new();
         mala.format("x^-2").await;
-        assert_eq!(mala.content, "$({x}^{-2})");
+        assert_eq!(mala.content, "$({x}^{-2}$)");
     }
 
     #[tokio::test]
@@ -84,14 +84,14 @@ mod tests {
         let mut mala = MaLa::new();
         mala.format("x^-22 + x^2").await;
         println!("{}", mala.content);
-        assert_eq!(mala.content, "$({x}^{-22}) + $({x}^{2})");
+        assert_eq!(mala.content, "$({x}^{-22}$) + $({x}^{2}$)");
     }
 
     #[tokio::test]
     async fn power_n_power() {
         let mut mala = MaLa::new();
         mala.format("x^2 + 2^2").await;
-        assert_eq!(mala.content, "$({x}^{2}) + $({2}^{2})");
+        assert_eq!(mala.content, "$({x}^{2}$) + $({2}^{2}$)");
     }
 
     #[tokio::test]
@@ -100,7 +100,7 @@ mod tests {
         mala.format("x^2 + 2^2\n((x+x)^2)/2").await;
         assert_eq!(
             mala.content,
-            "$({x}^{2}) + $({2}^{2})\n$({($({(x+x)}^{2}))}/{2})"
+            "$({x}^{2}$) + $({2}^{2}$)\n$({($({(x+x)}^{2}$))}/{2}$)"
         );
     }
 
@@ -108,6 +108,6 @@ mod tests {
     async fn power_n_frac() {
         let mut mala = MaLa::new();
         mala.format("x^2/2").await;
-        assert_eq!(mala.content, "$({$({x}^{2})}/{2})");
+        assert_eq!(mala.content, "$({$({x}^{2}$)}/{2}$)");
     }
 }
