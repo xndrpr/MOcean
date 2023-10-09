@@ -2,8 +2,9 @@ use std::time::Instant;
 
 use piston::WindowSettings;
 use piston_window::*;
+use regex::Regex;
 
-use crate::widgets::input::Input as WInput;
+use crate::{mala::MaLa, widgets::input::Input as WInput};
 
 pub struct Core {
     window: PistonWindow,
@@ -12,6 +13,9 @@ pub struct Core {
 }
 
 impl Core {
+    const BLACK: [f32; 4] = [0.2, 0.2, 0.2, 1.0];
+    const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
+
     pub fn new() -> Self {
         let width = 850.0;
         let height = 450.0;
@@ -30,18 +34,17 @@ impl Core {
     }
 
     pub async fn run(&mut self) {
-        const BLACK: [f32; 4] = [0.2, 0.2, 0.2, 1.0];
-        const WHITE: [f32; 4] = [1.0, 1.0, 1.0, 1.0];
-
         let assets = find_folder::Search::ParentsThenKids(3, 3)
             .for_folder("assets")
             .unwrap();
         let mut glyphs = self.window.load_font(assets.join("font.ttf")).unwrap();
 
         let mut input = WInput::new().await;
+        let mut mala = MaLa::new();
 
         while let Some(e) = self.window.next() {
             let now = Instant::now();
+
             if now.duration_since(input.cursor.last_blink) >= input.cursor.blink_interval {
                 input.cursor.visibility = !input.cursor.visibility;
                 input.cursor.last_blink = now;
@@ -54,6 +57,7 @@ impl Core {
 
             if let Some(Button::Keyboard(key)) = e.press_args() {
                 input.press(key, self.width).await;
+                mala.format(&input.text).await;
             }
             if let Some(Button::Keyboard(key)) = e.release_args() {
                 input.release(key).await;
@@ -65,16 +69,49 @@ impl Core {
                 let total_height = lines.len() as f64 * line_height;
                 let y_offset = (self.height as f64 - total_height) / 2.0;
 
-                clear(BLACK, g);
+                clear(Self::BLACK, g);
+
+                // for (i, line) in lines.iter().enumerate() {
+                //     let y = y_offset + (i as f64 * line_height);
+                //     let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
+
+                //     let transform = c.transform.trans(x, y);
+
+                //     text::Text::new_color(Self::WHITE, line_height as u32)
+                //         .draw(line, &mut glyphs, &c.draw_state, transform, g)
+                //         .unwrap();
+                // }
+
+                let lines: Vec<&str> = mala.content.lines().collect();
 
                 for (i, line) in lines.iter().enumerate() {
+                    let re = Regex::new(r"\$\((.*?)\)").unwrap();
+                    let expressions: Vec<String> = re
+                        .captures_iter(line)
+                        .map(|cap| cap[1].to_string())
+                        .collect();
                     let y = y_offset + (i as f64 * line_height);
                     let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
 
                     let transform = c.transform.trans(x, y);
 
-                    text::Text::new_color(WHITE, line_height as u32)
-                        .draw(line, &mut glyphs, &c.draw_state, transform, g)
+                    for exp in expressions {
+                        if exp.contains("/") {
+                            text::Text::new_color(Self::WHITE, line_height as u32)
+                                .draw("F", &mut glyphs, &c.draw_state, transform, g)
+                                .unwrap();
+                        }
+                    }
+                }
+
+                for (i, line) in lines.iter().enumerate() {
+                    let y = y_offset + (i as f64 * line_height) - 200.0;
+                    let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
+
+                    let transform = c.transform.trans(x, y);
+
+                    text::Text::new_color([0.8, 0.8, 0.8, 1.0], 16)
+                        .draw(&line, &mut glyphs, &c.draw_state, transform, g)
                         .unwrap();
                 }
 
@@ -98,7 +135,7 @@ impl Core {
                         input.cursor.y = y - line_height;
 
                         rectangle(
-                            WHITE,
+                            Self::WHITE,
                             [input.cursor.x, input.cursor.y, 2.0, line_height],
                             c.transform,
                             g,

@@ -1,7 +1,6 @@
 use std::time::Duration;
 
 use piston::Key;
-use regex::Regex;
 
 use crate::cursor::Cursor;
 
@@ -34,54 +33,15 @@ impl Input {
         char_vec.into_iter().collect()
     }
 
-    async fn power(&self, force: bool) -> String {
-        let re;
-        if force {
-            re = Regex::new(r"(\w+)\^(-?\d+)([+\-×/_=! ]*)").unwrap();
-        } else {
-            re = Regex::new(r"(\w+|\d+)\^(-?\d+)([+\-×/_=!])").unwrap();
-        }
-
-        let replaced_string = re
-            .replace_all(&self.text, |caps: &regex::Captures| {
-                let base = &caps[1];
-                let num = &caps[2];
-                let symbol = &caps[3];
-
-                let superscripted_num = num
-                    .chars()
-                    .map(|c| match c {
-                        '1' => '¹',
-                        '2' => '²',
-                        '3' => '³',
-                        '4' => '⁴',
-                        '5' => '⁵',
-                        '6' => '⁶',
-                        '7' => '⁷',
-                        '8' => '⁸',
-                        '9' => '⁹',
-                        '0' => '⁰',
-                        '-' => '⁻',
-                        _ => c,
-                    })
-                    .collect::<String>();
-
-                format!("{}{}{}", base, superscripted_num, symbol)
-            })
-            .to_string();
-
-        replaced_string
-    }
-
     pub async fn press(&mut self, key: Key, width: f64) {
-        println!("{:?}", key);
         let mut key = format!("{:?}", key)
             .replace("Minus", "-")
-            .replace("Space", " ");
+            .replace("Space", " ")
+            .replace("Slash", "/");
 
         if self.case == Case::UPPER {
             key = key.replace("Equals", "+");
-            key = key.replace("D8", "×");
+            key = key.replace("D8", "*");
             key = key.replace("D6", "^");
             key = key.replace("D0", ")");
             key = key.replace("D9", "(");
@@ -98,13 +58,7 @@ impl Input {
         if key.len() > 1 {
             key = key.replace("D", "");
             key = key.replace("NumPad", "");
-            key = key.replace("NumPadDivide", "");
-        }
-
-        if key.to_lowercase().contains("tab") {
-            self.text = self.power(true).await;
-        } else if self.text.contains("^") {
-            self.text = self.power(false).await;
+            key = key.replace("NumPadDivide", "/");
         }
 
         if key.to_lowercase().contains("shift") {
@@ -114,16 +68,10 @@ impl Input {
         }
 
         if key.to_lowercase().contains("backspace") && !self.text.is_empty() {
-            if self.case == Case::LOWER {
-                self.text.pop();
-                if self.text.len() <= 0 {
-                    self.text = "\n".to_string();
-                }
-            } else {
-                self.text = self.remove_last_word(self.text.clone()).await;
-                if self.text.len() <= 0 {
-                    self.text = "\n".to_string();
-                }
+            self.text.pop();
+
+            if self.text.len() <= 0 {
+                self.text = "\n".to_string();
             }
 
             return;
@@ -137,13 +85,13 @@ impl Input {
             self.text = self
                 .insert_char(
                     &self.text,
-                    self.text.len() - 1,
-                    key.to_lowercase().chars().next().unwrap(),
+                    self.text.len(),
+                    key.to_lowercase().chars().next().unwrap_or_default(),
                 )
                 .await;
         } else {
             self.text = self
-                .insert_char(&self.text, self.text.len() - 1, key.chars().next().unwrap())
+                .insert_char(&self.text, self.text.len(), key.chars().next().unwrap())
                 .await;
         }
     }
