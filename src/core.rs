@@ -42,6 +42,8 @@ impl Core {
         let mut input = WInput::new().await;
         let mut mala = MaLa::new();
 
+        let mut last_len = 0;
+
         while let Some(e) = self.window.next() {
             let now = Instant::now();
 
@@ -64,86 +66,139 @@ impl Core {
             }
 
             self.window.draw_2d(&e, |c, g, device| {
-                let lines: Vec<&str> = input.text.lines().collect();
-                let line_height = 32.0;
-                let total_height = lines.len() as f64 * line_height;
-                let y_offset = (self.height as f64 - total_height) / 2.0;
+                if last_len != input.text.chars().count() {
+                    last_len = input.text.chars().count();
 
-                clear(Self::BLACK, g);
+                    let lines: Vec<&str> = input.text.lines().collect();
+                    let line_height = 32.0;
+                    let total_height = lines.len() as f64 * line_height;
+                    let y_offset = (self.height as f64 - total_height) / 2.0;
 
-                // for (i, line) in lines.iter().enumerate() {
-                //     let y = y_offset + (i as f64 * line_height);
-                //     let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
+                    clear(Self::BLACK, g);
 
-                //     let transform = c.transform.trans(x, y);
+                    // for (i, line) in lines.iter().enumerate() {
+                    //     let y = y_offset + (i as f64 * line_height);
+                    //     let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
 
-                //     text::Text::new_color(Self::WHITE, line_height as u32)
-                //         .draw(line, &mut glyphs, &c.draw_state, transform, g)
-                //         .unwrap();
-                // }
+                    //     let transform = c.transform.trans(x, y);
 
-                let lines: Vec<&str> = mala.content.lines().collect();
+                    //     text::Text::new_color(Self::WHITE, line_height as u32)
+                    //         .draw(line, &mut glyphs, &c.draw_state, transform, g)
+                    //         .unwrap();
+                    // }
 
-                for (i, line) in lines.iter().enumerate() {
-                    let re = Regex::new(r"\$\((.*?)\)").unwrap();
-                    let expressions: Vec<String> = re
-                        .captures_iter(line)
-                        .map(|cap| cap[1].to_string())
-                        .collect();
-                    let y = y_offset + (i as f64 * line_height);
-                    let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
+                    let lines: Vec<&str> = mala.content.lines().collect();
 
-                    let transform = c.transform.trans(x, y);
+                    for (i, line) in lines.iter().enumerate() {
+                        let mut result = "".to_string();
+                        let expressions: Vec<&str> = line.split("}").collect();
 
-                    for exp in expressions {
-                        if exp.contains("/") {
-                            text::Text::new_color(Self::WHITE, line_height as u32)
-                                .draw("F", &mut glyphs, &c.draw_state, transform, g)
-                                .unwrap();
+                        for i in 0..expressions.len() {
+                            if i + 1 < expressions.len() {
+                                let next_exp = expressions.get(i + 1).unwrap();
+
+                                if next_exp.contains(")") {
+                                    let mut e = next_exp.split("$").nth(0).unwrap().to_string();
+                                    e.remove(0);
+                                    result += &e;
+                                }
+
+                                /* ---- Power ---- */
+                                let re = Regex::new(r"\^").unwrap();
+                                if let Some(_) = re.find(&next_exp) {
+                                    if !next_exp.ends_with("^")
+                                        && !next_exp.ends_with("-")
+                                        && !next_exp.ends_with("/")
+                                    {
+                                        let base =
+                                            expressions.get(i).unwrap().split("{").nth(1).unwrap();
+                                        let exponent = next_exp
+                                            .split("}")
+                                            .nth(0)
+                                            .unwrap()
+                                            .split("{")
+                                            .nth(1)
+                                            .unwrap();
+
+                                        result += base;
+                                        for ch in exponent.chars() {
+                                            let replacement = match ch {
+                                                '1' => "¹",
+                                                '2' => "²",
+                                                '3' => "³",
+                                                '4' => "⁴",
+                                                '5' => "⁵",
+                                                '6' => "⁶",
+                                                '7' => "⁷",
+                                                '8' => "⁸",
+                                                '9' => "⁹",
+                                                '0' => "⁰",
+                                                '-' => "⁻",
+                                                _ => "",
+                                            };
+                                            result.push_str(replacement);
+                                        }
+                                    }
+                                }
+
+                                /* ----  TODO: Fractions ---- */
+                            }
                         }
+
+                        let y = y_offset + (i as f64 * line_height);
+                        let x = self.width as f64 / 2.0 - (result.len() * 8) as f64;
+                        text::Text::new_color(Self::WHITE, line_height as u32)
+                            .draw(
+                                &result,
+                                &mut glyphs,
+                                &c.draw_state,
+                                c.transform.trans(x, y),
+                                g,
+                            )
+                            .unwrap();
                     }
-                }
 
-                for (i, line) in lines.iter().enumerate() {
-                    let y = y_offset + (i as f64 * line_height) - 200.0;
-                    let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
+                    for (i, line) in lines.iter().enumerate() {
+                        let y = y_offset + (i as f64 * line_height) - 200.0;
+                        let x = self.width as f64 / 2.0 - (line.len() * 8) as f64;
 
-                    let transform = c.transform.trans(x, y);
+                        let transform = c.transform.trans(x, y);
 
-                    text::Text::new_color([0.8, 0.8, 0.8, 1.0], 16)
-                        .draw(&line, &mut glyphs, &c.draw_state, transform, g)
-                        .unwrap();
-                }
-
-                let current_line_index = input.text.lines().count().saturating_sub(1);
-                let cursor_line_index = if current_line_index > 0 {
-                    current_line_index
-                } else {
-                    0
-                };
-
-                if let Some(current_line) = lines.get(cursor_line_index) {
-                    let y = y_offset + (cursor_line_index as f64 * line_height);
-                    let x = self.width as f64 / 2.0 - (current_line.len() * 8) as f64;
-
-                    if input.cursor.visibility {
-                        let cursor_x = x + glyphs
-                            .width(line_height as u32, &current_line)
-                            .unwrap_or(0.0);
-
-                        input.cursor.x = cursor_x + 10.0;
-                        input.cursor.y = y - line_height;
-
-                        rectangle(
-                            Self::WHITE,
-                            [input.cursor.x, input.cursor.y, 2.0, line_height],
-                            c.transform,
-                            g,
-                        );
+                        text::Text::new_color([0.8, 0.8, 0.8, 1.0], 16)
+                            .draw(&line, &mut glyphs, &c.draw_state, transform, g)
+                            .unwrap();
                     }
-                }
 
-                glyphs.factory.encoder.flush(device);
+                    // let current_line_index = input.text.lines().count().saturating_sub(1);
+                    // let cursor_line_index = if current_line_index > 0 {
+                    //     current_line_index
+                    // } else {
+                    //     0
+                    // };
+
+                    // if let Some(current_line) = lines.get(cursor_line_index) {
+                    //     let y = y_offset + (cursor_line_index as f64 * line_height);
+                    //     let x = self.width as f64 / 2.0 - (current_line.len() * 8) as f64;
+
+                    //     if input.cursor.visibility {
+                    //         let cursor_x = x + glyphs
+                    //             .width(line_height as u32, &current_line)
+                    //             .unwrap_or(0.0);
+
+                    //         input.cursor.x = cursor_x + 10.0;
+                    //         input.cursor.y = y - line_height;
+
+                    //         rectangle(
+                    //             Self::WHITE,
+                    //             [input.cursor.x, input.cursor.y, 2.0, line_height],
+                    //             c.transform,
+                    //             g,
+                    //         );
+                    //     }
+                    // }
+
+                    glyphs.factory.encoder.flush(device);
+                }
             });
         }
     }

@@ -14,7 +14,7 @@ impl MaLa {
 
     async fn power(&mut self) {
         let re =
-            Regex::new(r"\((?:[^()]+|\([^()]*\))*\)\s*\^\s*\d+|\b(?:[a-zA-Z]+|\d+)\s*\^\s*\d+")
+            Regex::new(r"\((?:[^()]+|\([^()]*\))\)\s*\^\s*-?\d+|\b(?:[a-zA-Z]+|\d+)\s*\^\s*-?\d+")
                 .unwrap();
 
         while let Some(mat) = re.captures(&self.content) {
@@ -70,6 +70,21 @@ mod tests {
         let mut mala = MaLa::new();
         mala.format("x^2 + 2/3").await;
         assert_eq!(mala.content, "$({x}^{2}) + $({2}/{3})");
+    }
+
+    #[tokio::test]
+    async fn negative_power() {
+        let mut mala = MaLa::new();
+        mala.format("x^-2").await;
+        assert_eq!(mala.content, "$({x}^{-2})");
+    }
+
+    #[tokio::test]
+    async fn negative_n_positive_power() {
+        let mut mala = MaLa::new();
+        mala.format("x^-22 + x^2").await;
+        println!("{}", mala.content);
+        assert_eq!(mala.content, "$({x}^{-22}) + $({x}^{2})");
     }
 
     #[tokio::test]
