@@ -15,8 +15,8 @@
 - Format on tab
 - Cursor
 - Cursor blink
+- Fractions
 - ~~Cursor movement~~
-- ~~Fractions~~
 - ~~Roots~~
 
 # Get started
@@ -28,3 +28,5 @@ After you opened the program, start typing.
 # Keys
 - Tab - format
 - ^ - power
+- / Fraction with 1 character
+- // Fraction with 2 or more characters
