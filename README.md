@@ -2,6 +2,7 @@
 
 ## Demo:
 ![Image](image.png)
+![Image](image-1.png)
 
 ## Methamtics Ocean - a simple formula editor.
 
